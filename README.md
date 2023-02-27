@@ -8,7 +8,7 @@ cd onebox-deployment-on-ecs
 
 ## Install dependencies
 ```
-python -m venv .venv
+python3 -m venv .venv
 source ./.venv/bin/activate
 
 ./scripts/install-deps.sh

@@ -22,4 +22,4 @@ set -o verbose
 npm ci
 
 # Install project dependencies
-python -m pip install -r requirements.txt -r requirements-dev.txt
+python3 -m pip install -r requirements.txt -r requirements-dev.txt

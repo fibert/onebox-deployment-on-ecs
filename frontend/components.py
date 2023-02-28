@@ -15,7 +15,7 @@ class Frontend(Stack):
         id_: str,
         ecs_cluster: ecs.Cluster,
         namespace: servicediscovery.PrivateDnsNamespace,
-        appserver_service_endpoint: str,
+        backend_endpoint: str,
         **kwargs: Any,
     ):
         super().__init__(scope, id_, **kwargs)
@@ -23,8 +23,7 @@ class Frontend(Stack):
         # pylint: disable=C0103
 
         container_environment = {
-            "SEARCH_DOMAIN": namespace.namespace_name,
-            "YELB_APPSERVER_ENDPOINT": appserver_service_endpoint,
+            "BACKEND_ENDPOINT": backend_endpoint,
         }
 
         self.ui = UI(

@@ -35,7 +35,7 @@ frontend = Frontend(
     "Frontend",
     ecs_cluster=shared.ecs_cluster,
     namespace=shared.namespace,
-    appserver_service_endpoint=backend.appserver_service_endpoint,
+    backend_endpoint=backend.appserver_service_endpoint,
     env=Environment(
         account=os.environ["CDK_DEFAULT_ACCOUNT"],
         region=os.environ["CDK_DEFAULT_REGION"],

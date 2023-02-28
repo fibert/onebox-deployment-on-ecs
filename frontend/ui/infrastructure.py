@@ -1,3 +1,4 @@
+import pathlib
 from typing import Any
 
 from aws_cdk import aws_ecs as ecs
@@ -9,13 +10,15 @@ from shared.constructs.ecs_services.frontend_fargate_service import (
     FrontendFargateService,
 )
 
-SERVICE_NAME = "yelb-ui"
+SERVICE_NAME = "compliment-ui"
 SERVICE_PORT = 80
 SERVICE_DESIRED_COUNT = 3
 SERVICE_CPU = 512
 SERVICE_MEMORY = 2048
-SERVICE_IMAGE = "mreferre/yelb-ui:0.10"
-SERVICE_LOG_PREFIX = "yelb-ui"
+SERVICE_LOG_PREFIX = "compliment-ui"
+SERVICE_HEALTH_CHECK_PATH = "/health"
+
+RUNTIME_DIRECTORY = "runtime"
 
 
 class UI(FrontendFargateService):
@@ -38,8 +41,15 @@ class UI(FrontendFargateService):
             desired_count=SERVICE_DESIRED_COUNT,
             cpu=SERVICE_CPU,
             memory=SERVICE_MEMORY,
-            image_name=SERVICE_IMAGE,
+            container_image=self.__get_container_image(),
             container_environment=container_environment,
+            health_check_path=SERVICE_HEALTH_CHECK_PATH,
             **kwargs,
         )
-       
+
+    def __get_container_image(self) -> ecs.ContainerImage:
+        directory_path = str(
+            pathlib.Path(__file__).parent.joinpath(RUNTIME_DIRECTORY).resolve()
+        )
+        container_image = ecs.AssetImage.from_asset(directory=directory_path)
+        return container_image

@@ -28,18 +28,9 @@ class Backend(Stack):
             ecs_cluster=ecs_cluster,
             namespace=namespace,
         )
-        self.appserver_service_endpoint = f"http://{appserver.service.cloud_map_service.service_name}:{appserver.port}"
 
-        Database(
-            self,
-            "Database",
-            ecs_cluster=ecs_cluster,
-            namespace=namespace,
-        )
-
-        Redis(
-            self,
-            "Redis",
-            ecs_cluster=ecs_cluster,
-            namespace=namespace,
+        appserver_service_name = appserver.service.cloud_map_service.service_name
+        namespace_name = appserver.service.cloud_map_service.namespace.namespace_name
+        self.appserver_service_endpoint = (
+            f"http://{appserver_service_name}.{namespace_name}:{appserver.port}"
         )

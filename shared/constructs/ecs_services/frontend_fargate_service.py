@@ -18,28 +18,29 @@ class FrontendFargateService(Construct):
         desired_count: int,
         cpu: int,
         memory: int,
-        image_name: str,
+        container_image: ecs.ContainerImage,
         container_environment: list[str, str] = {},
+        health_check_path: str = "/",
         **kwargs: Any,
     ):
         super().__init__(scope, id_, **kwargs)
 
+        self.ecs_cluster = ecs_cluster
+        self.namespace = namespace
         self.name = name
         self.port = port
         self.desired_count = desired_count
         self.cpu = cpu
         self.memory = memory
-        self.image_name = image_name
+        self.container_image = container_image
         self.log_prefix = name
+        self.container_environment = container_environment
+        self.health_check_path = health_check_path
 
         self.task_definition = self.__create_task_definition()
 
-        self.__add_container_to_task_definition(
-            self.task_definition, container_environment
-        )
-        self.service = self.__create_ecs_service(
-            ecs_cluster, namespace, self.task_definition
-        )
+        self.__add_container_to_task_definition()
+        self.service = self.__create_ecs_service()
 
     def __create_task_definition(self) -> ecs.FargateTaskDefinition:
         task_definition = ecs.FargateTaskDefinition(
@@ -50,17 +51,13 @@ class FrontendFargateService(Construct):
         )
         return task_definition
 
-    def __add_container_to_task_definition(
-        self,
-        task_definition: ecs.TaskDefinition,
-        container_environment: list[str, str],
-    ) -> ecs.ContainerDefinition:
-        container = task_definition.add_container(
+    def __add_container_to_task_definition(self) -> ecs.ContainerDefinition:
+        container = self.task_definition.add_container(
             "Container",
-            image=ecs.ContainerImage.from_registry(self.image_name),
+            image=self.container_image,
             memory_limit_mib=self.memory,
             cpu=self.cpu,
-            environment=container_environment,
+            environment=self.container_environment,
             logging=ecs.LogDriver.aws_logs(stream_prefix=self.name),
         )
 
@@ -69,14 +66,9 @@ class FrontendFargateService(Construct):
 
         return container
 
-    def __create_ecs_service(
-        self,
-        ecs_cluster: ecs.Cluster,
-        namespace: servicediscovery.PrivateDnsNamespace,
-        task_definition: ecs.FargateTaskDefinition,
-    ) -> ecs.FargateService:
+    def __create_ecs_service(self) -> ecs.FargateService:
         cloud_map_options = ecs.CloudMapOptions(
-            cloud_map_namespace=namespace,
+            cloud_map_namespace=self.namespace,
             dns_record_type=servicediscovery.DnsRecordType.A,
         )
 
@@ -84,13 +76,16 @@ class FrontendFargateService(Construct):
             ecs_patterns.ApplicationLoadBalancedFargateService(
                 self,
                 "Service",
-                cluster=ecs_cluster,
-                task_definition=task_definition,
+                cluster=self.ecs_cluster,
+                task_definition=self.task_definition,
                 desired_count=self.desired_count,
                 public_load_balancer=True,
-                # service_name=self.name,
                 cloud_map_options=cloud_map_options,
             )
+        )
+        
+        alb_fargate_service_pattern.target_group.configure_health_check(
+            path=self.health_check_path
         )
 
         return alb_fargate_service_pattern.service

@@ -6,8 +6,6 @@ from aws_cdk import aws_servicediscovery as servicediscovery
 from constructs import Construct
 
 from backend.appserver.infrastructure import AppServer
-from backend.database.infrastructure import Database
-from backend.redis.infrastructure import Redis
 
 
 class Backend(Stack):
